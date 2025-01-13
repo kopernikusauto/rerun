@@ -774,6 +774,8 @@
 <a href="#774" id="774">774</a>
 <a href="#775" id="775">775</a>
 <a href="#776" id="776">776</a>
+<a href="#777" id="777">777</a>
+<a href="#778" id="778">778</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::BTreeMap;
 <span class="kw">use </span>std::ops::Range;
 
@@ -942,7 +944,7 @@
             .iter()
             .find_position(|desc| <span class="kw">match </span>desc {
                 ColumnDescriptor::Time(time_column_desc) =&gt; {
-                    <span class="kw-2">&amp;</span>time_column_desc.timeline() == query_timeline
+                    <span class="kw-2">&amp;</span>time_column_desc.timeline == query_timeline
                 }
                 ColumnDescriptor::Component(<span class="kw">_</span>) =&gt; <span class="bool-val">false</span>,
             })
@@ -1059,27 +1061,29 @@
                         .unwrap_or_else(|| Timeline::new(<span class="string">""</span>, TimeType::Sequence));
 
                     <span class="comment">// if this column can actually be hidden, then that's the corresponding action
-                    </span><span class="kw">let </span>hide_action =
-                        <span class="kw">match </span>column {
-                            ColumnDescriptor::Time(desc) =&gt; (desc.timeline() != filtered_index)
-                                .then(|| HideColumnAction::HideTimeColumn {
-                                    timeline_name: <span class="kw-2">*</span>desc.name(),
-                                }),
+                    </span><span class="kw">let </span>hide_action = <span class="kw">match </span>column {
+                        ColumnDescriptor::Time(desc) =&gt; {
+                            (desc.timeline != filtered_index).then(|| {
+                                HideColumnAction::HideTimeColumn {
+                                    timeline_name: <span class="kw-2">*</span>desc.timeline.name(),
+                                }
+                            })
+                        }
 
-                            ColumnDescriptor::Component(desc) =&gt; {
-                                <span class="prelude-val">Some</span>(HideColumnAction::HideComponentColumn {
-                                    entity_path: desc.entity_path.clone(),
-                                    component_name: desc.component_name,
-                                })
-                            }
-                        };
+                        ColumnDescriptor::Component(desc) =&gt; {
+                            <span class="prelude-val">Some</span>(HideColumnAction::HideComponentColumn {
+                                entity_path: desc.entity_path.clone(),
+                                component_name: desc.component_name,
+                            })
+                        }
+                    };
 
                     <span class="kw">let </span>header_ui = |ui: <span class="kw-2">&amp;mut </span>egui::Ui| {
                         <span class="kw">let </span>text = egui::RichText::new(column.short_name()).strong();
 
                         <span class="kw">let </span>is_selected = <span class="kw">match </span>column {
                             ColumnDescriptor::Time(descr) =&gt; {
-                                <span class="kw-2">&amp;</span>descr.timeline() == <span class="self">self</span>.ctx.rec_cfg.time_ctrl.read().timeline()
+                                <span class="kw-2">&amp;</span>descr.timeline == <span class="self">self</span>.ctx.rec_cfg.time_ctrl.read().timeline()
                             }
                             ColumnDescriptor::Component(component_column_descriptor) =&gt; <span class="self">self
                                 </span>.ctx
@@ -1097,7 +1101,7 @@
                                     <span class="self">self</span>.ctx.command_sender.send_system(
                                         re_viewer_context::SystemCommand::SetActiveTimeline {
                                             rec_id: <span class="self">self</span>.ctx.recording_id().clone(),
-                                            timeline: descr.timeline(),
+                                            timeline: descr.timeline,
                                         },
                                     );
                                 }

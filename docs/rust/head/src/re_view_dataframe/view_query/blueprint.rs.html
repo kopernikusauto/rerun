@@ -504,8 +504,8 @@
             .filter(|column| <span class="kw">match </span>column {
                 ColumnDescriptor::Time(desc) =&gt; {
                     <span class="comment">// we always include the query timeline column because we need it for the dataframe ui
-                    </span>desc.name() == <span class="kw-2">&amp;</span>query_timeline_name
-                        || selected_time_columns.contains(desc.name())
+                    </span>desc.timeline.name() == <span class="kw-2">&amp;</span>query_timeline_name
+                        || selected_time_columns.contains(desc.timeline.name())
                 }
 
                 ColumnDescriptor::Component(desc) =&gt; {

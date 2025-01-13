@@ -1580,7 +1580,7 @@
 <span class="attr">#[pymethods]
 </span><span class="kw">impl </span>PyIndexColumnDescriptor {
     <span class="kw">fn </span>__repr__(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
-        <span class="macro">format!</span>(<span class="string">"Index(timeline:{})"</span>, <span class="self">self</span>.<span class="number">0</span>.name())
+        <span class="macro">format!</span>(<span class="string">"Index(timeline:{})"</span>, <span class="self">self</span>.<span class="number">0</span>.timeline.name())
     }
 
     <span class="doccomment">/// The name of the index.
@@ -1588,7 +1588,7 @@
     /// This property is read-only.
     </span><span class="attr">#[getter]
     </span><span class="kw">fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
-        <span class="self">self</span>.<span class="number">0</span>.name()
+        <span class="self">self</span>.<span class="number">0</span>.timeline.name()
     }
 
     <span class="doccomment">/// Part of generic ColumnDescriptor interface: always False for Index.
@@ -2877,7 +2877,7 @@
             include_semantically_empty_columns,
             include_indicator_columns,
             include_tombstone_columns,
-            filtered_index: <span class="prelude-val">Some</span>(timeline.timeline()),
+            filtered_index: <span class="prelude-val">Some</span>(timeline.timeline),
             filtered_index_range: <span class="prelude-val">None</span>,
             filtered_index_values: <span class="prelude-val">None</span>,
             using_index_values: <span class="prelude-val">None</span>,

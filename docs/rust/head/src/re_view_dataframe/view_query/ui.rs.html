@@ -817,7 +817,7 @@
 
                 <span class="comment">// The query timeline is always active because it's necessary for the dataframe ui
                 // (for tooltips).
-                </span><span class="kw">let </span>is_query_timeline = time_column_descriptor.name() == timeline.name();
+                </span><span class="kw">let </span>is_query_timeline = time_column_descriptor.timeline.name() == timeline.name();
                 <span class="kw">let </span>is_enabled = !is_query_timeline;
                 <span class="kw">let </span><span class="kw-2">mut </span>is_visible =
                     is_query_timeline || selected_columns.contains(<span class="kw-2">&amp;</span>column_selector);

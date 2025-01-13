@@ -930,40 +930,12 @@
 <a href="#930" id="930">930</a>
 <a href="#931" id="931">931</a>
 <a href="#932" id="932">932</a>
-<a href="#933" id="933">933</a>
-<a href="#934" id="934">934</a>
-<a href="#935" id="935">935</a>
-<a href="#936" id="936">936</a>
-<a href="#937" id="937">937</a>
-<a href="#938" id="938">938</a>
-<a href="#939" id="939">939</a>
-<a href="#940" id="940">940</a>
-<a href="#941" id="941">941</a>
-<a href="#942" id="942">942</a>
-<a href="#943" id="943">943</a>
-<a href="#944" id="944">944</a>
-<a href="#945" id="945">945</a>
-<a href="#946" id="946">946</a>
-<a href="#947" id="947">947</a>
-<a href="#948" id="948">948</a>
-<a href="#949" id="949">949</a>
-<a href="#950" id="950">950</a>
-<a href="#951" id="951">951</a>
-<a href="#952" id="952">952</a>
-<a href="#953" id="953">953</a>
-<a href="#954" id="954">954</a>
-<a href="#955" id="955">955</a>
-<a href="#956" id="956">956</a>
-<a href="#957" id="957">957</a>
-<a href="#958" id="958">958</a>
-<a href="#959" id="959">959</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! All the APIs used specifically for `re_dataframe`.
 
 </span><span class="kw">use </span>std::collections::{BTreeMap, BTreeSet};
 <span class="kw">use </span>std::ops::Deref;
 <span class="kw">use </span>std::ops::DerefMut;
 
-<span class="kw">use </span>arrow::datatypes::DataType <span class="kw">as </span>ArrowDatatype;
 <span class="kw">use </span>arrow2::{
     array::ListArray <span class="kw">as </span>ArrowListArray,
     datatypes::{DataType <span class="kw">as </span>Arrow2Datatype, Field <span class="kw">as </span>Arrow2Field},
@@ -1005,7 +977,7 @@
     <span class="attr">#[inline]
     </span><span class="kw">pub fn </span>datatype(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Arrow2Datatype {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::Time(descr) =&gt; descr.datatype().into(),
+            <span class="self">Self</span>::Time(descr) =&gt; descr.datatype.clone(),
             <span class="self">Self</span>::Component(descr) =&gt; descr.returned_datatype(),
         }
     }
@@ -1039,9 +1011,10 @@
 </span><span class="attr">#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 </span><span class="kw">pub struct </span>TimeColumnDescriptor {
     <span class="doccomment">/// The timeline this column is associated with.
-    </span>timeline: Timeline,
+    </span><span class="kw">pub </span>timeline: Timeline,
 
-    is_null: bool,
+    <span class="doccomment">/// The Arrow datatype of the column.
+    </span><span class="kw">pub </span>datatype: Arrow2Datatype,
 }
 
 <span class="kw">impl </span>PartialOrd <span class="kw">for </span>TimeColumnDescriptor {
@@ -1056,49 +1029,17 @@
     </span><span class="kw">fn </span>cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; std::cmp::Ordering {
         <span class="kw">let </span><span class="self">Self </span>{
             timeline,
-            is_null: <span class="kw">_</span>,
+            datatype: <span class="kw">_</span>,
         } = <span class="self">self</span>;
         timeline.cmp(<span class="kw-2">&amp;</span>other.timeline)
     }
 }
 
 <span class="kw">impl </span>TimeColumnDescriptor {
-    <span class="doccomment">/// Used when returning a null column, i.e. when a lookup failed.
-    </span><span class="kw">pub fn </span>new_null(name: TimelineName) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            <span class="comment">// TODO(cmc): I picked a sequence here because I have to pick something.
-            // It doesn't matter, only the name will remain in the Arrow schema anyhow.
-            </span>timeline: Timeline::new_sequence(name),
-            is_null: <span class="bool-val">true</span>,
-        }
-    }
-
-    <span class="kw">pub fn </span>timeline(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Timeline {
-        <span class="self">self</span>.timeline
-    }
-
-    <span class="kw">pub fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>TimelineName {
-        <span class="self">self</span>.timeline.name()
-    }
-
-    <span class="kw">pub fn </span>typ(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; re_log_types::TimeType {
-        <span class="self">self</span>.timeline.typ()
-    }
-
-    <span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>datatype(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ArrowDatatype {
-        <span class="kw">let </span><span class="self">Self </span>{ timeline, is_null } = <span class="self">self</span>;
-        <span class="kw">if </span><span class="kw-2">*</span>is_null {
-            ArrowDatatype::Null
-        } <span class="kw">else </span>{
-            timeline.typ().datatype()
-        }
-    }
-
     <span class="kw">fn </span>metadata(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; arrow2::datatypes::Metadata {
         <span class="kw">let </span><span class="self">Self </span>{
             timeline,
-            is_null: <span class="kw">_</span>,
+            datatype: <span class="kw">_</span>,
         } = <span class="self">self</span>;
 
         std::iter::once(<span class="prelude-val">Some</span>((
@@ -1110,10 +1051,15 @@
     }
 
     <span class="attr">#[inline]
+    </span><span class="comment">// Time column must be nullable since static data doesn't have a time.
     </span><span class="kw">pub fn </span>to_arrow_field(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Arrow2Field {
-        <span class="kw">let </span>nullable = <span class="bool-val">true</span>; <span class="comment">// Time column must be nullable since static data doesn't have a time.
-        </span>Arrow2Field::new(<span class="self">self</span>.name().to_string(), <span class="self">self</span>.datatype().into(), nullable)
-            .with_metadata(<span class="self">self</span>.metadata())
+        <span class="kw">let </span><span class="self">Self </span>{ timeline, datatype } = <span class="self">self</span>;
+        Arrow2Field::new(
+            timeline.name().to_string(),
+            datatype.clone(),
+            <span class="bool-val">true</span>, <span class="comment">/* nullable */
+        </span>)
+        .with_metadata(<span class="self">self</span>.metadata())
     }
 }
 
@@ -1694,7 +1640,7 @@ pub struct ArchetypeFieldColumnSelector {
         <span class="kw">let </span>timelines = <span class="self">self</span>.all_timelines_sorted().into_iter().map(|timeline| {
             ColumnDescriptor::Time(TimeColumnDescriptor {
                 timeline,
-                is_null: <span class="bool-val">false</span>,
+                datatype: timeline.datatype().into(),
             })
         });
 
@@ -1768,7 +1714,7 @@ pub struct ArchetypeFieldColumnSelector {
 
         TimeColumnDescriptor {
             timeline,
-            is_null: <span class="bool-val">false</span>,
+            datatype: timeline.datatype().into(),
         }
     }
 

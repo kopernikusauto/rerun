@@ -2982,6 +2982,19 @@
 <a href="#2982" id="2982">2982</a>
 <a href="#2983" id="2983">2983</a>
 <a href="#2984" id="2984">2984</a>
+<a href="#2985" id="2985">2985</a>
+<a href="#2986" id="2986">2986</a>
+<a href="#2987" id="2987">2987</a>
+<a href="#2988" id="2988">2988</a>
+<a href="#2989" id="2989">2989</a>
+<a href="#2990" id="2990">2990</a>
+<a href="#2991" id="2991">2991</a>
+<a href="#2992" id="2992">2992</a>
+<a href="#2993" id="2993">2993</a>
+<a href="#2994" id="2994">2994</a>
+<a href="#2995" id="2995">2995</a>
+<a href="#2996" id="2996">2996</a>
+<a href="#2997" id="2997">2997</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     collections::BTreeSet,
     sync::{
@@ -3357,73 +3370,82 @@
     ) -&gt; Vec&lt;(usize, ColumnDescriptor)&gt; {
         selection
             .iter()
-            .map(|column| <span class="kw">match </span>column {
-                ColumnSelector::Time(selected_column) =&gt; {
-                    <span class="kw">let </span>TimeColumnSelector {
-                        timeline: selected_timeline,
-                    } = selected_column;
+            .map(|column| {
+                <span class="kw">match </span>column {
+                    ColumnSelector::Time(selected_column) =&gt; {
+                        <span class="kw">let </span>TimeColumnSelector {
+                            timeline: selected_timeline,
+                        } = selected_column;
 
-                    view_contents
-                        .iter()
-                        .enumerate()
-                        .filter_map(|(idx, view_column)| <span class="kw">match </span>view_column {
-                            ColumnDescriptor::Time(view_descr) =&gt; <span class="prelude-val">Some</span>((idx, view_descr)),
-                            ColumnDescriptor::Component(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
-                        })
-                        .find(|(_idx, view_descr)| <span class="kw-2">*</span>view_descr.name() == <span class="kw-2">*</span>selected_timeline)
-                        .map_or_else(
-                            || {
-                                (
-                                    usize::MAX,
-                                    ColumnDescriptor::Time(TimeColumnDescriptor::new_null(
-                                        <span class="kw-2">*</span>selected_timeline,
-                                    )),
-                                )
-                            },
-                            |(idx, view_descr)| (idx, ColumnDescriptor::Time(view_descr.clone())),
-                        )
-                }
+                        view_contents
+                            .iter()
+                            .enumerate()
+                            .filter_map(|(idx, view_column)| <span class="kw">match </span>view_column {
+                                ColumnDescriptor::Time(view_descr) =&gt; <span class="prelude-val">Some</span>((idx, view_descr)),
+                                ColumnDescriptor::Component(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
+                            })
+                            .find(|(_idx, view_descr)| {
+                                <span class="kw-2">*</span>view_descr.timeline.name() == <span class="kw-2">*</span>selected_timeline
+                            })
+                            .map_or_else(
+                                || {
+                                    (
+                                        usize::MAX,
+                                        ColumnDescriptor::Time(TimeColumnDescriptor {
+                                            <span class="comment">// TODO(cmc): I picked a sequence here because I have to pick something.
+                                            // It doesn't matter, only the name will remain in the Arrow schema anyhow.
+                                            </span>timeline: Timeline::new_sequence(<span class="kw-2">*</span>selected_timeline),
+                                            datatype: arrow2::datatypes::DataType::Null,
+                                        }),
+                                    )
+                                },
+                                |(idx, view_descr)| {
+                                    (idx, ColumnDescriptor::Time(view_descr.clone()))
+                                },
+                            )
+                    }
 
-                ColumnSelector::Component(selected_column) =&gt; {
-                    <span class="kw">let </span>ComponentColumnSelector {
-                        entity_path: selected_entity_path,
-                        component_name: selected_component_name,
-                    } = selected_column;
+                    ColumnSelector::Component(selected_column) =&gt; {
+                        <span class="kw">let </span>ComponentColumnSelector {
+                            entity_path: selected_entity_path,
+                            component_name: selected_component_name,
+                        } = selected_column;
 
-                    view_contents
-                        .iter()
-                        .enumerate()
-                        .filter_map(|(idx, view_column)| <span class="kw">match </span>view_column {
-                            ColumnDescriptor::Component(view_descr) =&gt; <span class="prelude-val">Some</span>((idx, view_descr)),
-                            ColumnDescriptor::Time(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
-                        })
-                        .find(|(_idx, view_descr)| {
-                            view_descr.entity_path == <span class="kw-2">*</span>selected_entity_path
-                                &amp;&amp; view_descr.component_name.matches(selected_component_name)
-                        })
-                        .map_or_else(
-                            || {
-                                (
-                                    usize::MAX,
-                                    ColumnDescriptor::Component(ComponentColumnDescriptor {
-                                        entity_path: selected_entity_path.clone(),
-                                        archetype_name: <span class="prelude-val">None</span>,
-                                        archetype_field_name: <span class="prelude-val">None</span>,
-                                        component_name: ComponentName::from(
-                                            selected_component_name.clone(),
-                                        ),
-                                        store_datatype: arrow2::datatypes::DataType::Null,
-                                        is_static: <span class="bool-val">false</span>,
-                                        is_indicator: <span class="bool-val">false</span>,
-                                        is_tombstone: <span class="bool-val">false</span>,
-                                        is_semantically_empty: <span class="bool-val">false</span>,
-                                    }),
-                                )
-                            },
-                            |(idx, view_descr)| {
-                                (idx, ColumnDescriptor::Component(view_descr.clone()))
-                            },
-                        )
+                        view_contents
+                            .iter()
+                            .enumerate()
+                            .filter_map(|(idx, view_column)| <span class="kw">match </span>view_column {
+                                ColumnDescriptor::Component(view_descr) =&gt; <span class="prelude-val">Some</span>((idx, view_descr)),
+                                ColumnDescriptor::Time(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
+                            })
+                            .find(|(_idx, view_descr)| {
+                                view_descr.entity_path == <span class="kw-2">*</span>selected_entity_path
+                                    &amp;&amp; view_descr.component_name.matches(selected_component_name)
+                            })
+                            .map_or_else(
+                                || {
+                                    (
+                                        usize::MAX,
+                                        ColumnDescriptor::Component(ComponentColumnDescriptor {
+                                            entity_path: selected_entity_path.clone(),
+                                            archetype_name: <span class="prelude-val">None</span>,
+                                            archetype_field_name: <span class="prelude-val">None</span>,
+                                            component_name: ComponentName::from(
+                                                selected_component_name.clone(),
+                                            ),
+                                            store_datatype: arrow2::datatypes::DataType::Null,
+                                            is_static: <span class="bool-val">false</span>,
+                                            is_indicator: <span class="bool-val">false</span>,
+                                            is_tombstone: <span class="bool-val">false</span>,
+                                            is_semantically_empty: <span class="bool-val">false</span>,
+                                        }),
+                                    )
+                                },
+                                |(idx, view_descr)| {
+                                    (idx, ColumnDescriptor::Component(view_descr.clone()))
+                                },
+                            )
+                    }
                 }
             })
             .collect_vec()
@@ -4223,10 +4245,14 @@
             .iter()
             .map(|(view_idx, column)| <span class="kw">match </span>column {
                 ColumnDescriptor::Time(descr) =&gt; {
-                    max_value_per_index.get(<span class="kw-2">&amp;</span>descr.timeline()).map_or_else(
+                    max_value_per_index.get(<span class="kw-2">&amp;</span>descr.timeline).map_or_else(
                         || arrow2::array::new_null_array(column.datatype(), <span class="number">1</span>),
                         |(_time, time_sliced)| {
-                            descr.typ().make_arrow_array(time_sliced.clone()).into()
+                            descr
+                                .timeline
+                                .typ()
+                                .make_arrow_array(time_sliced.clone())
+                                .into()
                         },
                     )
                 }

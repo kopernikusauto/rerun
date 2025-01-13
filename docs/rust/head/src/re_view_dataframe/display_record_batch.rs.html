@@ -517,7 +517,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, DisplayRecordBatchError&gt; {
         <span class="kw">match </span>column_descriptor {
             ColumnDescriptor::Time(desc) =&gt; {
-                <span class="kw">let </span>timeline = desc.timeline();
+                <span class="kw">let </span>timeline = desc.timeline;
 
                 <span class="kw">let </span>time_data = TimeColumn::read_array(column_data).map_err(|err| {
                     DisplayRecordBatchError::BadTimeColumn {
