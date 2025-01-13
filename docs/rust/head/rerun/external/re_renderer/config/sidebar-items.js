@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["DeviceTier","InsufficientDeviceCapabilities","WgpuBackendType"],"fn":["instance_descriptor","parse_graphics_backend","supported_backends","validate_graphics_backend_applicability"],"struct":["DeviceCaps"]};
